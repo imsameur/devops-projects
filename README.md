@@ -20,7 +20,7 @@ This repository contains my hands-on projects and practical implementations acro
 
 ### Terraform
 
-- [AWS Infrastructure with Terraform](#)
+- [AWS Infrastructure with Terraform](./terraform-aws-infrastructure)
 
 ## About
 These projects are built as part of my hands-on DevOps journey, with a focus on practical infrastructure, automation, deployment, and operations.
