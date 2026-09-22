@@ -1,0 +1,24 @@
+{
+  "name": "mini-shop",
+  "version": "1.0.0",
+  "description": "Mini Shop ecommerce demo for DevOps portfolio",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "private": true,
+  "dependencies": {
+    "express": "5.2.1"
+  }
+}
