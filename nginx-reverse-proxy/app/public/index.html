@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Shop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="/">Mini Shop<span>.</span></a>
+    <a class="cart-link" href="#cart">Your cart</a>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">THE DESK COLLECTION</p>
+      <h1>Small upgrades.<br>Better workdays.</h1>
+      <p>Everyday essentials for a comfortable, productive workspace.</p>
+    </section>
+
+    <div class="shop-layout">
+      <section aria-labelledby="products-heading">
+        <div class="section-heading">
+          <h2 id="products-heading">Shop essentials</h2>
+          <span>Prices in BDT</span>
+        </div>
+        <p id="product-status" role="status">
+          Products will appear here once the API is connected.
+        </p>
+        <div id="products" class="product-grid"></div>
+      </section>
+
+      <aside id="cart" class="cart" aria-labelledby="cart-heading">
+        <h2 id="cart-heading">Your cart</h2>
+        <div id="cart-items">
+          <p class="muted">Your cart is empty.</p>
+        </div>
+        <div class="cart-total">
+          <span>Total</span>
+          <strong id="cart-total">৳0.00</strong>
+        </div>
+        <p class="cart-note">Demo shop. Checkout is not available.</p>
+      </aside>
+    </div>
+  </main>
+
+  <footer>Mini Shop · Everyday desk essentials</footer>
+  <script type="module" src="/shop.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+name: mini-shop-project06
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-1.1.0}
+    image: mini-shop-notes:${APP_VERSION:-1.1.0}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 20s
+
+    expose:
+      - "3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      SHOP_NAME: "${SHOP_NAME:-Mini Shop}"
+      APP_VERSION: "${APP_VERSION:-1.1.0}"
+      MONGODB_DB: "${MONGODB_DB:?Set MONGODB_DB in .env}"
+      MONGODB_URI: "mongodb://${MONGO_APP_USERNAME:?Set MONGO_APP_USERNAME}:${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD}@mongo:27017/${MONGODB_DB:?Set MONGODB_DB}?authSource=${MONGODB_DB:?Set MONGODB_DB}"
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health', {signal: AbortSignal.timeout(10000)}).then(r => process.exit(r.status === 200 ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 15s
+      timeout: 12s
+      start_period: 20s
+      retries: 3
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+        bind:
+          create_host_path: false
+
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+
+    depends_on:
+      app:
+        condition: service_healthy
+
+
+  mongo:
+    image: mongo:8.0
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:?Set MONGO_INITDB_ROOT_USERNAME}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:?Set MONGO_INITDB_ROOT_PASSWORD}"
+      MONGODB_DB: "${MONGODB_DB:?Set MONGODB_DB}"
+      MONGO_APP_USERNAME: "${MONGO_APP_USERNAME:?Set MONGO_APP_USERNAME}"
+      MONGO_APP_PASSWORD: "${MONGO_APP_PASSWORD:?Set MONGO_APP_PASSWORD}"
+
+    volumes:
+      - mongo_data:/data/db
+      - type: bind
+        source: ./mongo/init.js
+        target: /docker-entrypoint-initdb.d/01-init.js
+        read_only: true
+        bind:
+          create_host_path: false
+
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --host
+        - mongo
+        - --eval
+        - >-
+          try {
+            const appDb = db.getSiblingDB(process.env.MONGODB_DB);
+            appDb.auth(process.env.MONGO_APP_USERNAME, process.env.MONGO_APP_PASSWORD);
+            appDb.notes.findOne();
+            quit(0);
+          } catch (error) {
+            quit(1);
+          }
+      interval: 10s
+      timeout: 10s
+      start_period: 30s
+      retries: 10
+
+volumes:
+  mongo_data:
