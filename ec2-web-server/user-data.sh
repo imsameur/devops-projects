@@ -1,0 +1,54 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Install Nginx
+dnf install -y nginx
+
+# Create the sample website
+cat > /usr/share/nginx/html/index.html <<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Shop by Niyamoter shad</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 60px auto;
+      padding: 20px;
+      background: #f4f6f8;
+      color: #243247;
+    }
+    main {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+    }
+    li { margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Mini Shop by Niyamoter shad</h1>
+    <p>Automated EC2 Web Server Deployment</p>
+    <ul>
+      <li>Keyboard: BDT 1,200</li>
+      <li>Mouse: BDT 800</li>
+      <li>Headphones: BDT 3,200</li>
+    </ul>
+    <p>Deployed using EC2 user data and served by Nginx.</p>
+  </main>
+</body>
+</html>
+HTML
+
+# Set readable permissions and validate configuration
+chmod 644 /usr/share/nginx/html/index.html
+nginx -t
+
+# Start now and automatically start after reboot
+systemctl enable --now nginx
+
+echo "Project 07 bootstrap completed successfully"
