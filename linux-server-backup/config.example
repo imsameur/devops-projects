@@ -1,0 +1,4 @@
+SOURCE_DIR="$HOME/backup-lab/source"
+BACKUP_ROOT="$HOME/backup-lab/backups"
+LOG_FILE="$HOME/backup-lab/logs/backup.log"
+RETENTION_DAYS=7

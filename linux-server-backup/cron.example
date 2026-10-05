@@ -1,0 +1,5 @@
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+CRON_TZ=Asia/Dhaka
+
+0 2 * * * /home/ec2-user/devops-projects/linux-server-backup/backup.sh >> /home/ec2-user/backup-lab/logs/cron.log 2>&1
