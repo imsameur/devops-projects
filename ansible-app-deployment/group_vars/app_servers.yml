@@ -1,0 +1,5 @@
+app_user: mini-shop
+app_group: mini-shop
+app_dir: /opt/mini-shop
+app_port: 3000
+shop_name: "Mini Shop by Niyamoter shad"

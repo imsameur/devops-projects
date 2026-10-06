@@ -1,0 +1,32 @@
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0755"
+
+- name: Deploy Mini Shop application
+  ansible.builtin.copy:
+    src: mini-shop/server.js
+    dest: "{{ app_dir }}/server.js"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
+  notify: Restart Mini Shop
+
+- name: Deploy Mini Shop systemd service
+  ansible.builtin.template:
+    src: mini-shop.service.j2
+    dest: /etc/systemd/system/mini-shop.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Mini Shop
+
+- name: Ensure Mini Shop service is enabled and running
+  ansible.builtin.systemd_service:
+    name: mini-shop.service
+    enabled: true
+    state: started
+    daemon_reload: true

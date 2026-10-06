@@ -1,0 +1,6 @@
+- name: Install Node.js 24 and npm
+  ansible.builtin.dnf:
+    name:
+      - nodejs24
+      - nodejs24-npm
+    state: present
