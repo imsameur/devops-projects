@@ -1,0 +1,23 @@
+# Terraform provider cache
+.terraform/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+
+# Saved plans
+tfplan
+destroy-plan
+*.tfplan
+
+# Local variable values
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Local CLI configuration
+.terraformrc
+terraform.rc

@@ -1,0 +1,14 @@
+﻿[
+    {
+        "Time": "2026-10-06T03:39:36.617000+00:00",
+        "Status": "Successful",
+        "Description": "Terminating EC2 instance: i-08b344996801dc922",
+        "Cause": "At 2026-10-06T03:39:28Z a monitor alarm TargetTracking-project10-web-asg-AlarmLow-36e56652-04d5-4621-b097-e701c3176fd7 in state ALARM triggered policy project10-request-scaling changing the desired capacity from 3 to 2.  At 2026-10-06T03:39:36Z an instance was taken out of service in response to a difference between desired and actual capacity, shrinking the capacity from 3 to 2.  At 2026-10-06T03:39:36Z instance i-08b344996801dc922 was selected for termination."
+    },
+    {
+        "Time": "2026-10-06T03:19:39.851000+00:00",
+        "Status": "Successful",
+        "Description": "Launching a new EC2 instance: i-08b344996801dc922",
+        "Cause": "At 2026-10-06T03:19:35Z a monitor alarm TargetTracking-project10-web-asg-AlarmHigh-57a23eea-f94d-47af-bbb5-2bfd17fa93bc in state ALARM triggered policy project10-request-scaling changing the desired capacity from 2 to 3.  At 2026-10-06T03:19:38Z an instance was started in response to a difference between desired and actual capacity, increasing the capacity from 2 to 3."
+    }
+]
