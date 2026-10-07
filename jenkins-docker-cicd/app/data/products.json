@@ -1,0 +1,34 @@
+[
+  {
+    "id": "p001",
+    "name": "Wireless Mouse",
+    "description": "Compact wireless mouse for everyday work.",
+    "priceInPoisha": 85000,
+    "currency": "BDT",
+    "image": "/images/mouse.svg"
+  },
+  {
+    "id": "p002",
+    "name": "Mechanical Keyboard",
+    "description": "Comfortable keyboard for coding and typing.",
+    "priceInPoisha": 350000,
+    "currency": "BDT",
+    "image": "/images/keyboard.svg"
+  },
+  {
+    "id": "p003",
+    "name": "USB-C Hub",
+    "description": "Connect your everyday accessories with one hub.",
+    "priceInPoisha": 180000,
+    "currency": "BDT",
+    "image": "/images/hub.svg"
+  },
+  {
+    "id": "p004",
+    "name": "Laptop Stand",
+    "description": "Adjustable stand for a comfortable desk setup.",
+    "priceInPoisha": 120000,
+    "currency": "BDT",
+    "image": "/images/stand.svg"
+  }
+]

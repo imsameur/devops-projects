@@ -1,0 +1,11 @@
+**/node_modules
+**/.git
+**/.env
+**/.env.*
+**/*.log
+**/*.pem
+**/*.key
+**/coverage
+**/.DS_Store
+docs/
+README.md
