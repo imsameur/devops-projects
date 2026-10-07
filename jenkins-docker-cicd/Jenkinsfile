@@ -80,5 +80,36 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker rm -f \
+                      mini-shop-cicd-build-5 \
+                      mini-shop-cicd \
+                      mini-shop-cicd-manual \
+                      2>/dev/null || true
+
+                    docker run -d \
+                      --restart unless-stopped \
+                      --name mini-shop-cicd \
+                      -p 3000:3000 \
+                      "${IMAGE_NAME}:${IMAGE_TAG}"
+
+                    for attempt in $(seq 1 20); do
+                        if curl --fail --silent http://localhost:3000/health; then
+                            echo
+                            curl --fail --silent http://localhost:3000/version
+                            echo
+                            exit 0
+                        fi
+                        sleep 3
+                    done
+
+                    docker logs mini-shop-cicd
+                    exit 1
+                '''
+            }
+        }
     }
 }
