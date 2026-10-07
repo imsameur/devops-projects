@@ -41,5 +41,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Security scan') {
+            steps {
+                sh '''
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      -v /tmp/trivy-cache:/root/.cache/ \
+                      aquasec/trivy:latest \
+                      image \
+                      --scanners vuln \
+                      --severity HIGH,CRITICAL \
+                      --ignore-unfixed \
+                      --exit-code 1 \
+                      "${IMAGE_NAME}:${IMAGE_TAG}"
+                '''
+            }
+        }
     }
 }
