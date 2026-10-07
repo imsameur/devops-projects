@@ -58,5 +58,27 @@ pipeline {
                 '''
             }
         }
+
+        stage('Push image') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        echo "$DOCKERHUB_TOKEN" | docker login \
+                          --username "$DOCKERHUB_USER" \
+                          --password-stdin
+
+                        docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+
+                        docker logout
+                    '''
+                }
+            }
+        }
     }
 }
