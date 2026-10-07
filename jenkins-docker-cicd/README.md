@@ -1,4 +1,4 @@
-# Project 12: Jenkins Docker CI/CD
+# Jenkins Docker CI/CD
 
 ## Overview
 
