@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mini-shop
+  namespace: kubernetes-nodejs
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: mini-shop
+  template:
+    metadata:
+      labels:
+        app: mini-shop
+    spec:
+      containers:
+        - name: mini-shop
+          image: mini-shop-k8s:1.2.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+            - name: SHOP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mini-shop-config
+                  key: SHOP_NAME
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: mini-shop-config
+                  key: APP_VERSION
+            - name: MONGODB_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: mini-shop-config
+                  key: MONGODB_DB
+            - name: MONGO_APP_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mini-shop-config
+                  key: MONGO_APP_USERNAME
+            - name: MONGO_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mini-shop-secret
+                  key: MONGO_APP_PASSWORD
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_APP_USERNAME):$(MONGO_APP_PASSWORD)@mongodb:27017/$(MONGODB_DB)?authSource=$(MONGODB_DB)"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /version
+              port: http
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /version
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mini-shop-config
+  namespace: kubernetes-nodejs
+data:
+  MONGODB_DB: "mini_shop"
+  MONGO_APP_USERNAME: "mini_shop_app"
+  MONGO_INITDB_ROOT_USERNAME: "mongo_admin"
+  APP_VERSION: "1.2.0"
+  SHOP_NAME: "Mini Shop by Niyamoter shad"
