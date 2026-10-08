@@ -1,4 +1,4 @@
-# Project 014 - Prometheus & Grafana Monitoring
+# Project - Prometheus & Grafana Monitoring
 
 ## Overview
 
