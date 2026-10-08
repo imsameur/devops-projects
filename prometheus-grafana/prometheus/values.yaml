@@ -1,0 +1,58 @@
+# Project 014 - Prometheus & Grafana Monitoring
+
+grafana:
+  enabled: true
+
+  service:
+    type: ClusterIP
+
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+prometheus:
+  enabled: true
+
+  prometheusSpec:
+    retention: 2d
+
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 200m
+      limits:
+        memory: 1500Mi
+        cpu: 1000m
+
+alertmanager:
+  enabled: true
+
+  alertmanagerSpec:
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 50m
+      limits:
+        memory: 256Mi
+        cpu: 200m
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+# Disable inaccessible Minikube control-plane metrics
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  enabled: false  

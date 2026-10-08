@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: project014-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+
+spec:
+  groups:
+    - name: project014.rules
+      rules:
+        - alert: NodeExporterDown
+          expr: (up{job="node-exporter"} == 0) or absent(up{job="node-exporter"})
+          for: 1m
+          labels:
+            severity: critical
+            project: "014"
+            namespace: monitoring
+          annotations:
+            summary: "Node Exporter is DOWN"
+            description: "Prometheus cannot scrape Node Exporter for more than 1 minute."

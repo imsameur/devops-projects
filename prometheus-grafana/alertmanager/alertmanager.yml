@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: project014-routing
+  namespace: monitoring
+  labels:
+    release: monitoring
+
+spec:
+  route:
+    receiver: project014-receiver
+    groupBy:
+      - alertname
+    groupWait: 10s
+    groupInterval: 30s
+    repeatInterval: 1h
+
+    matchers:
+      - name: severity
+        value: critical
+        matchType: "="
+
+  receivers:
+    - name: project014-receiver
