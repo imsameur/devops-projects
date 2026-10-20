@@ -2,16 +2,16 @@
 
 A portfolio project that archives Jenkins build logs from AWS EC2 to a private Amazon S3 bucket. In the project scenario, logs were previously stored in an ELK stack; S3 is being evaluated as a potentially lower-cost archive. **Cost savings have not been measured.**
 
-The archive runs as the `jenkins` user with an EC2 IAM role. A cron job is configured for 03:00 Asia/Dhaka each day. The manual success and failure tests below passed; the first scheduled cron execution has **not yet been verified**.
+The archive runs as the `jenkins` user with an EC2 IAM role. Manual success and failure tests passed. The scheduled 03:00 Asia/Dhaka cron run was verified on 2026-10-20 at 03:00:01 BDT, with four logs uploaded and zero reported failures.
 
 ## Application
 
 - Scans direct Jenkins jobs at `/var/lib/jenkins/jobs/<job>/builds/<number>/log`.
 - Selects logs last modified on the previous calendar day in Asia/Dhaka (BDT).
 - Uploads them to `s3://finops-jenkins-logs-xd/jenkins-logs/<date>/<job>-<build>.log`.
-- Leaves the original Jenkins logs on EC2; it does not delete them.
-- Reports the number of matching logs and failed uploads; returns a non-zero status when an upload fails.
-- Demo scope: no Jenkins folders or multibranch job traversal, build-completion check, log redaction, or duplicate-upload avoidance yet.
+- Leaves the original Jenkins logs on EC2; the script does not delete them.
+- Reports matching logs and failed uploads; returns a non-zero status if an upload fails.
+- Demo scope: no Jenkins folder/multibranch traversal, build-completion check, log redaction, or duplicate-upload avoidance yet.
 
 ## Stack
 
@@ -25,7 +25,7 @@ Jenkins build logs on EC2
         v
 scripts/archive-logs.sh (deployed to /usr/local/bin)
         |  runs as jenkins via cron, 03:00 Asia/Dhaka
-        |  uses AWS CLI + EC2 IAM role; no access keys on the instance
+        |  uses AWS CLI + EC2 IAM role; no static access keys on EC2
         v
 Private S3 bucket: finops-jenkins-logs-xd
         `-- jenkins-logs/YYYY-MM-DD/job-name-build-number.log
@@ -37,16 +37,15 @@ The Jenkins web UI was accessed through an SSH tunnel (`http://localhost:8080/` 
 
 Prerequisites: Jenkins installed at `/var/lib/jenkins`, AWS CLI v2 available to the `jenkins` user, a private S3 bucket in `ap-southeast-1`, and an EC2 IAM role permitted to list the `jenkins-logs/` prefix and upload objects under it. No static AWS access keys are required on EC2.
 
-From the repository root, check syntax and deploy the version-controlled source file:
+From the **project directory**, check syntax and deploy the version-controlled source file:
 
 ```bash
-cd /home/ubuntu/finops-jenkins-log-archiver
 bash -n scripts/archive-logs.sh
 sudo install -o root -g root -m 0755 scripts/archive-logs.sh \
   /usr/local/bin/finops-jenkins-archive-logs.sh
 ```
 
-Run manually as the `jenkins` user. Without an override, it checks the **previous BDT day**:
+Run manually as the `jenkins` user. Without an override, the script checks the **previous BDT day**:
 
 ```bash
 sudo -u jenkins /usr/local/bin/finops-jenkins-archive-logs.sh
@@ -72,7 +71,7 @@ S3 uses object-key prefixes here; `jenkins-logs/` is not a separate filesystem d
 
 ## Configuration
 
-The current `0.1.0` script keeps infrastructure settings in the source file; they are not all environment overrides. The bucket name is not a secret, but moving it into configuration would improve portability.
+The current `0.1.0` script keeps infrastructure settings in the source file; they are not all environment overrides. The bucket name is not a secret, but moving it into configuration would improve portability. Before deploying in another AWS account, update these values and grant the EC2 role access to the corresponding bucket prefix.
 
 | Setting | Current value | Purpose |
 |---|---|---|
@@ -101,15 +100,23 @@ systemctl is-active cron
 timedatectl show -p Timezone --value
 ```
 
-Expected service status is `active` and timezone is `Asia/Dhaka`. At 03:00 BDT the default target is **the preceding BDT calendar day**. If EC2 is stopped at that time, ordinary cron does not replay the missed run. A scheduled run is not proven merely by installing a crontab entry.
+Expected service status is `active` and timezone is `Asia/Dhaka`. At 03:00 BDT the default target is **the preceding BDT calendar day**. If EC2 is stopped then, ordinary cron does not replay the missed run.
 
-After the first scheduled run, inspect its output:
+To inspect a scheduled run, check its output:
 
 ```bash
 sudo -u jenkins tail -n 30 /var/lib/jenkins/finops-archive-cron.log
 ```
 
-The cron log may not exist until the first run. Check its `Matched` and `failed` counts, then confirm the corresponding S3 keys. Plan log rotation if this lab is kept running.
+For the recorded 2026-10-20 run, the journal confirmed that cron invoked the script at **03:00:01 BDT**:
+
+```bash
+sudo journalctl --since "2026-10-20 02:55:00" \
+  --until "2026-10-20 03:10:00" --no-pager |
+  grep -F 'finops-jenkins-archive-logs.sh'
+```
+
+The cron log may not exist before the first run on a new deployment. Plan log rotation if this lab is kept running.
 
 ## Verification and Tests
 
@@ -119,7 +126,7 @@ From EC2, check the instance-role identity without configuring an access key:
 sudo -u jenkins aws sts get-caller-identity --region ap-southeast-1
 ```
 
-For the recorded manual run, S3 listed all four archived objects:
+For the recorded run, S3 listed all four archived objects:
 
 ```bash
 sudo -u jenkins aws s3 ls \
@@ -127,11 +134,11 @@ sudo -u jenkins aws s3 ls \
   --recursive --region ap-southeast-1
 ```
 
-The listing confirms the presence and sizes of objects; it does not verify their contents or prove a scheduled cron execution. A Jenkins test build showed `Finished: SUCCESS`. The script test printed `Matched: 4, failed: 0`, including three intentionally safe `backup-job` logs and one `finops-log-demo` log.
+The listing confirms the presence and sizes of objects; it does not verify their contents. The scheduled run was verified separately with the journal and cron output. A Jenkins test build showed `Finished: SUCCESS`. The script printed `Matched: 4, failed: 0`, including three intentionally safe `backup-job` logs and one `finops-log-demo` log.
 
 ## Simulate Failure and Recovery
 
-This test temporarily removes AWS CLI from the **one process's** `PATH`. It does not uninstall AWS CLI or change cron:
+This test temporarily removes AWS CLI from **one process's** `PATH`. It does not uninstall AWS CLI or change cron:
 
 ```bash
 sudo -u jenkins env PATH=/no-aws-here DATE=2026-10-19 \
@@ -147,9 +154,9 @@ Observed: `AWS CLI is not installed.`, exit code `1`, then normal AWS CLI availa
 | Path | Contents |
 |---|---|
 | `scripts/archive-logs.sh` | Bash archiver source, version `0.1.0` |
-| `docs/test-results.md` | Recorded manual success, failure/recovery, and pending cron verification |
+| `docs/test-results.md` | Manual success, failure/recovery, and verified 03:00 BDT cron execution |
 | `README.md` | Setup, operation, evidence, limitations, and cleanup |
-| `docs/screenshots/` | Planned evidence images; add files and links only after capturing them |
+| `docs/screenshots/` | Five evidence screenshots: build, upload, S3 listing, failure/recovery, and cron |
 
 The installed `/usr/local/bin/finops-jenkins-archive-logs.sh` is a deployment copy, not the repository source. Reinstall it after changing the source file.
 
@@ -157,16 +164,16 @@ The installed `/usr/local/bin/finops-jenkins-archive-logs.sh` is a deployment co
 
 See [recorded test results](docs/test-results.md).
 
-Verified manually on EC2:
+Verified on EC2:
 
 - Jenkins `finops-log-demo` build #1 succeeded.
 - An S3 smoke test and a manual Jenkins log upload succeeded with the instance role.
 - The deployed script, run as `jenkins`, matched and uploaded four logs with zero reported failures.
 - S3 listing showed `backup-job-1.log`, `backup-job-2.log`, `backup-job-3.log`, and `finops-log-demo-1.log` under the test date.
 - The simulated missing-CLI case exited with status `1`; AWS CLI worked afterward.
-- The crontab entry was saved and the cron service was active.
+- On **2026-10-20 at 03:00:01 BDT**, the journal recorded a `(jenkins) CMD` for the scheduled script; its cron output reported `Matched: 4, failed: 0`.
 
-**Pending:** the first actual 03:00 BDT cron execution and any measurement of ELK-versus-S3 costs.
+**Pending:** a measured ELK-versus-S3 cost comparison. No cost savings are claimed yet.
 
 ## Limitations and FinOps Notes
 
@@ -178,9 +185,9 @@ Verified manually on EC2:
 
 ## Cleanup
 
-To stop future archive runs, remove **only this project's** entry from the `jenkins` user's crontab with `sudo crontab -u jenkins -e`; do not stop system cron if other jobs use it. Preserve the repository and any required log evidence before stopping or terminating the EC2 instance. Stopping EC2 also stops Jenkins and prevents cron from running.
+To stop future archive runs, remove **only this project's** entry from the `jenkins` user's crontab with `sudo crontab -u jenkins -e`; do not stop system cron if other jobs use it. Preserve the repository and any required log evidence before stopping or terminating EC2. Stopping EC2 also stops Jenkins and prevents cron from running.
 
-Review retention and any compliance requirements before deleting S3 objects or the bucket. Remove unused IAM roles, policies, EBS volumes, and public IP allocations only when the lab is fully retired. Never commit `.pem` private keys, access keys, or raw production logs.
+Review retention and compliance requirements before deleting S3 objects or the bucket. Remove unused IAM roles, policies, EBS volumes, and public IP allocations only when the lab is fully retired. Never commit `.pem` private keys, access keys, or raw production logs.
 
 ## Screenshots
 
@@ -195,4 +202,7 @@ Review retention and any compliance requirements before deleting S3 objects or t
 
 ### Failure and Recovery
 ![Missing AWS CLI simulation returned exit code 1, followed by CLI recovery](docs/screenshots/04-failure-recovery.png)
+
+### Scheduled Cron Execution
+![Jenkins cron job ran at 03:00 BDT and archived four logs](docs/screenshots/05-cron-execution.png)
 

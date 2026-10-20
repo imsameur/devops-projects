@@ -1,28 +1,33 @@
 # Test Results
 
-Date: 2026-10-19 (BDT)
-AWS Region: ap-southeast-1
+Manual test date: 2026-10-19 (BDT)
+Scheduled cron verification: 2026-10-20 (BDT)
+AWS Region: `ap-southeast-1`
 
-## Success tests
+## Success Tests
 
-- Jenkins `finops-log-demo` build #1: SUCCESS.
-- EC2 IAM role দিয়ে S3 smoke-test file upload: SUCCESS.
-- `jenkins` user দিয়ে archive script run: `Matched: 4, failed: 0`.
-- S3 listing-এ চারটি log পাওয়া গেছে:
-  - backup-job-1.log
-  - backup-job-2.log
-  - backup-job-3.log
-  - finops-log-demo-1.log
+- Jenkins `finops-log-demo` build #1 completed with `SUCCESS`.
+- An S3 smoke-test file was uploaded from EC2 using the instance IAM role.
+- The archive script, run as the `jenkins` user, reported `Matched: 4, failed: 0`.
+- The S3 object listing showed four archived build logs:
+  - `backup-job-1.log`
+  - `backup-job-2.log`
+  - `backup-job-3.log`
+  - `finops-log-demo-1.log`
 
-## Failure/recovery test
+## Failure and Recovery Test
 
-- শুধু test command-এর PATH থেকে AWS CLI বাদ দিলে script জানিয়েছে:
-  `AWS CLI is not installed.` এবং exit code `1`।
-- স্বাভাবিক environment-এ `aws --version` আবার কাজ করেছে।
+- AWS CLI was hidden from the script for one test process by overriding `PATH`. The script printed `AWS CLI is not installed.` and exited with status `1`.
+- In the normal environment, `aws --version` worked afterward. AWS CLI was not uninstalled.
+- This test covers the missing-CLI case, not an S3 permission or network failure.
 
-## Cron status
+## Scheduled Cron Verification
 
-- Timezone: Asia/Dhaka.
-- Jenkins user-এর crontab-এ প্রতিদিন 03:00-এর entry আছে।
-- Cron service: active.
-- Actual scheduled run: NOT YET VERIFIED.
+- EC2 timezone: `Asia/Dhaka`.
+- The `jenkins` user's crontab schedules the archive script daily at 03:00 BDT.
+- The cron service was `active`.
+- On 2026-10-20 at **03:00:01 BDT**, the system journal recorded a `(jenkins) CMD` entry for `/usr/local/bin/finops-jenkins-archive-logs.sh`.
+- The cron output reported four uploads and `Matched: 4, failed: 0` for logs selected from 2026-10-19 BDT.
+- Evidence: [scheduled cron execution screenshot](screenshots/05-cron-execution.png).
+
+The S3 listing verifies that the objects exist; their contents were not independently downloaded or compared. Cost savings against ELK have not been measured.
