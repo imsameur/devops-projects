@@ -196,5 +196,3 @@ Review retention and any compliance requirements before deleting S3 objects or t
 ### Failure and Recovery
 ![Missing AWS CLI simulation returned exit code 1, followed by CLI recovery](docs/screenshots/04-failure-recovery.png)
 
-### Scheduled Cron Execution
-Pending: add a screenshot only after an actual 03:00 BDT cron run is verified.
